@@ -21,10 +21,14 @@ func main() {
 	//	return nil
 	//})
 
-	err := excelp.ReadModel[User](readContext, func(index int, user User, err error) error {
-		fmt.Println(index, err)
-		bytes, _ := json.Marshal(user)
-		fmt.Println(index, string(bytes))
+	err := excelp.ReadModel[User](readContext, func(index int, user User, e *excelp.CellErr) error {
+		if e != nil {
+			bytes, _ := json.Marshal(e)
+			fmt.Println(index, string(bytes))
+		} else {
+			bytes, _ := json.Marshal(user)
+			fmt.Println(index, string(bytes))
+		}
 		return nil
 	})
 	if err != nil {

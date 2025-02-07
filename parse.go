@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func parse[T any](c *ExcelReadContext, row []string) (T, error) {
+func parse[T any](c *ExcelReadContext, row []string) (T, *CellErr) {
 	rowLen := len(row)
 	dest := new(T)
 	v := reflect.ValueOf(dest).Elem()
@@ -20,7 +20,11 @@ func parse[T any](c *ExcelReadContext, row []string) (T, error) {
 		fieldByName := v.FieldByName(s.name)
 		err := scanField(fieldByName, value, s.timeFormat)
 		if err != nil {
-			return *dest, err
+			return *dest, &CellErr{
+				Err:   err.Error(),
+				Col:   i,
+				Value: value,
+			}
 		}
 	}
 	return *dest, nil
