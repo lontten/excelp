@@ -8,8 +8,8 @@ import (
 
 // index 从 0开始
 type User struct {
-	ID       *int64           `excelp:"index:0"`
-	Date     *time.Time       `excelp:"index:1;format:2006-01-02;"`
+	ID       *int64           `excelp:"index:0;"`
+	Date     *time.Time       `excelp:"index:1;format:2006-01-02;required"`
 	Time     *time.Time       `excelp:"index:2;format:15:04:05;"`
 	DateTime *time.Time       `excelp:"index:3;format:2006-01-02 15:04:05;"`
 	Uuid     *uuid.UUID       `excelp:"index:4"`

@@ -3,14 +3,16 @@ package excelp
 import (
 	"database/sql"
 	"fmt"
+	"github.com/pkg/errors"
 	"reflect"
 	"strconv"
 	"time"
 )
 
-func parse[T any](c *ExcelReadContext, row []string) (T, *CellErr) {
+func parse[T any](c *ExcelReadContext, row []string) (T, []CellErr) {
 	rowLen := len(row)
 	dest := new(T)
+	errList := make([]CellErr, 0)
 	v := reflect.ValueOf(dest).Elem()
 	for i, s := range c.m {
 		if i >= rowLen {
@@ -18,20 +20,23 @@ func parse[T any](c *ExcelReadContext, row []string) (T, *CellErr) {
 		}
 		value := row[i]
 		fieldByName := v.FieldByName(s.name)
-		err := scanField(fieldByName, value, s.timeFormat)
+		err := scanField(fieldByName, value, s)
 		if err != nil {
-			return *dest, &CellErr{
+			errList = append(errList, CellErr{
 				Err:   err.Error(),
 				Col:   i,
 				Value: value,
-			}
+			})
 		}
 	}
-	return *dest, nil
+	return *dest, errList
 }
 
-func scanField(field reflect.Value, value string, timeFormat string) error {
+func scanField(field reflect.Value, value string, f Field) error {
 	if value == "" {
+		if f.required {
+			return errors.New("required")
+		}
 		return nil
 	}
 	// 如果字段是指针类型
@@ -88,7 +93,7 @@ func scanField(field reflect.Value, value string, timeFormat string) error {
 	case reflect.Struct:
 		switch field.Type().Name() {
 		case "Time":
-			t, err := time.Parse(timeFormat, value)
+			t, err := time.Parse(f.timeFormat, value)
 			if err != nil {
 				return fmt.Errorf("can not convert %v to time.Time", value)
 			}

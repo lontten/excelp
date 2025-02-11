@@ -21,8 +21,8 @@ func main() {
 	//	return nil
 	//})
 
-	err := excelp.ReadModel[User](readContext, func(index int, user User, e *excelp.CellErr) error {
-		if e != nil {
+	err := excelp.ReadModel[User](readContext, func(index int, user User, e []excelp.CellErr) error {
+		if len(e) > 0 {
 			bytes, _ := json.Marshal(e)
 			fmt.Println(index, string(bytes))
 		} else {

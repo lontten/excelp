@@ -14,7 +14,7 @@ type User struct {
 	ID       *int64           `excelp:"index:0"`
 	Date     *time.Time       `excelp:"index:1;format:2006-01-02;"`
 	Time     *time.Time       `excelp:"index:2;format:15:04:05;"`
-	DateTime *time.Time       `excelp:"index:3;format:2006-01-02 15:04:05;"`
+	DateTime *time.Time       `excelp:"index:3;format:2006-01-02 15:04:05;required"`
 	Uuid     *uuid.UUID       `excelp:"index:4"`
 	Money    *decimal.Decimal `excelp:"index:5"`
 	Fl       *float64         `excelp:"index:g"`
