@@ -125,18 +125,24 @@ func (c *ExcelReadContext) Close() error {
 	return nil
 }
 
-func Read(c *ExcelReadContext, fun func(index int, row []string) error) error {
+func Read(
+	c *ExcelReadContext,
+	fun func(index int, row []string) error,
+) error {
 	return read[int](c, fun, nil)
 }
 
-func ReadModel[T any](c *ExcelReadContext, fun func(index int, t T, err []CellErr) error) error {
+func ReadModel[T any](
+	c *ExcelReadContext,
+	fun func(index int, row []string, t T, err []CellErr) error,
+) error {
 	return read[T](c, nil, fun)
 }
 
 func read[T any](
 	c *ExcelReadContext,
 	fun1 func(index int, row []string) error,
-	fun2 func(index int, t T, err []CellErr) error,
+	fun2 func(index int, row []string, t T, err []CellErr) error,
 ) error {
 	if c == nil {
 		return errors.New("ExcelReadContext is nil")
@@ -186,7 +192,7 @@ func read[T any](
 			e = fun1(c.currentIndex, list)
 		} else if fun2 != nil {
 			t, errList := parse[T](c, list)
-			e = fun2(c.currentIndex, t, errList)
+			e = fun2(c.currentIndex, list, t, errList)
 		} else {
 			return errors.New("fun1 or fun2 is nil")
 		}
