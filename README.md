@@ -37,12 +37,14 @@
     
     defer readContext.Close()
     
-    err := excelp.ReadModel[User](readContext, func(index int, user *User, err error) error {
-		if err != nil {
-			return errors.New("read model error")
+    err := excelp.ReadModel[User](readContext, func(index int, user User, e []excelp.CellErr) error {
+        if len(e) > 0 {
+            bytes, _ := json.Marshal(e)
+            fmt.Println(index, string(bytes))
+        } else {
+            bytes, _ := json.Marshal(user)
+            fmt.Println(index, string(bytes))
         }
-		bytes, _ := json.Marshal(user)
-		fmt.Println(string(bytes))
         return nil
 	})
 	if err != nil {
