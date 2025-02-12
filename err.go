@@ -1,6 +1,9 @@
 package excelp
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+	"strconv"
+)
 
 var (
 	ErrNil          = errors.New("nil")
@@ -11,7 +14,19 @@ var (
 )
 
 type CellErr struct {
-	Err   string
-	Col   int
-	Value string
+	Err   string // 错误信息
+	Col   string // 列
+	Row   int    // 行
+	Value string // excel cell 值
+}
+
+func (e CellErr) IsRequiredErr() bool {
+	if e.Err == "required" {
+		return true
+	}
+	return false
+}
+
+func (e CellErr) ToExcelCellName() string {
+	return e.Col + strconv.Itoa(e.Row)
 }

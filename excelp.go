@@ -185,8 +185,8 @@ func read[T any](
 		if fun1 != nil {
 			e = fun1(c.currentIndex, list)
 		} else if fun2 != nil {
-			t, err := parse[T](c, list)
-			e = fun2(c.currentIndex, t, err)
+			t, errList := parse[T](c, list)
+			e = fun2(c.currentIndex, t, errList)
 		} else {
 			return errors.New("fun1 or fun2 is nil")
 		}

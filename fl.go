@@ -9,8 +9,8 @@ import (
 	"unicode"
 )
 
-// excel index:字段名
-// index 从0开始
+// excel row index:字段名
+// row index 从0开始
 // 过滤掉首字母小写的字段
 func _getStructC(t reflect.Type) (m map[int]Field, err error) {
 	m = make(map[int]Field)

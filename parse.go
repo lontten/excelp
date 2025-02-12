@@ -3,6 +3,7 @@ package excelp
 import (
 	"database/sql"
 	"fmt"
+	"github.com/lontten/excelp/utils"
 	"github.com/pkg/errors"
 	"reflect"
 	"strconv"
@@ -22,9 +23,11 @@ func parse[T any](c *ExcelReadContext, row []string) (T, []CellErr) {
 		fieldByName := v.FieldByName(s.name)
 		err := scanField(fieldByName, value, s)
 		if err != nil {
+			name, _ := utils.ColumnNumberToName(i)
 			errList = append(errList, CellErr{
 				Err:   err.Error(),
-				Col:   i,
+				Col:   name,
+				Row:   c.currentIndex,
 				Value: value,
 			})
 		}
