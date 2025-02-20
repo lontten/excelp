@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -70,18 +71,21 @@ func scanField(field reflect.Value, value string, f Field) error {
 	case reflect.String:
 		field.SetString(value)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		value = strings.ReplaceAll(value, ",", "")
 		intValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return fmt.Errorf("failed to convert %s to int for field %s: %v", value, field.Type().Name(), err)
 		}
 		field.SetInt(intValue)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		value = strings.ReplaceAll(value, ",", "")
 		uintValue, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return fmt.Errorf("failed to convert %s to uint for field %s: %v", value, field.Type().Name(), err)
 		}
 		field.SetUint(uintValue)
 	case reflect.Float32, reflect.Float64:
+		value = strings.ReplaceAll(value, ",", "")
 		floatValue, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return fmt.Errorf("failed to convert %s to float for field %s: %v", value, field.Type().Name(), err)
