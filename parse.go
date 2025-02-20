@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func parse[T any](c *ExcelReadContext, row []string) (T, []CellErr) {
+func parse[T any](c *ExcelReadContext, index int, row []string) (T, []CellErr) {
 	rowLen := len(row)
 	dest := new(T)
 	errList := make([]CellErr, 0)
@@ -28,7 +28,7 @@ func parse[T any](c *ExcelReadContext, row []string) (T, []CellErr) {
 			errList = append(errList, CellErr{
 				Err:   err.Error(),
 				Col:   name,
-				Row:   c.currentIndex,
+				Row:   index,
 				Value: value,
 			})
 		}

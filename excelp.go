@@ -253,7 +253,7 @@ func doExec[T any](
 	if fun1 != nil {
 		e = fun1(index, list)
 	} else if fun2 != nil {
-		t, errList := parse[T](c, list)
+		t, errList := parse[T](c, index, list)
 		e = fun2(index, list, t, errList)
 	} else {
 		return errors.New("fun1 or fun2 is nil")
