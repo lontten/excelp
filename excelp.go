@@ -1,6 +1,7 @@
 package excelp
 
 import (
+	"github.com/lontten/lcore"
 	"github.com/pkg/errors"
 	"github.com/xuri/excelize/v2"
 	"os"
@@ -30,6 +31,13 @@ type ExcelReadContext struct {
 	scanV    reflect.Value
 	scanT    reflect.Type
 	m        map[int]Field
+
+	// ------ line -----
+	enableAsync bool
+	// 启用多线程
+	maxLine      int
+	waitLine     int
+	rejectPolicy lcore.RejectPolicy // 拒绝策略
 }
 type Field struct {
 	name       string
@@ -96,8 +104,17 @@ func (c *ExcelReadContext) SkipEmpty() *ExcelReadContext {
 	return c
 }
 
-// MinCol 设置 最小列数，当列数不足，会填充空字符串
-func (c *ExcelReadContext) MinCol(num int) *ExcelReadContext {
+// EnableAsync 启用异步
+func (c *ExcelReadContext) EnableAsync(maxWorkers int, queueSize int, rejectPolicy lcore.RejectPolicy) *ExcelReadContext {
+	c.enableAsync = true
+	c.maxLine = maxWorkers
+	c.waitLine = queueSize
+	c.rejectPolicy = rejectPolicy
+	return c
+}
+
+// ColNum 设置 列数，当列数不足，会填充空字符串
+func (c *ExcelReadContext) ColNum(num int) *ExcelReadContext {
 	c.minCol = num
 	return c
 }
@@ -150,60 +167,103 @@ func read[T any](
 	if c.err != nil {
 		return c.err
 	}
+	var pool *lcore.ThreadPool
+	if c.enableAsync {
+		pool = lcore.NewThreadPool(c.maxLine, c.waitLine, c.rejectPolicy)
+		pool.Start()
+		defer pool.Shutdown()
+	}
 
 	dest := new(T)
 	c.initModel(dest)
 
 	rows := c.rows
 	for rows.Next() {
+		if c.err != nil {
+			return c.err
+		}
 		c.currentIndex++
-		if c.currentIndex < c.skip+1 {
+		index := c.currentIndex
+		if index < c.skip+1 {
 			continue
 		}
 		col, err := rows.Columns()
 		if err != nil {
 			return err
 		}
-		var list = make([]string, 0)
-		for _, v := range col {
-			list = append(list, strings.TrimSpace(v))
-		}
 
-		if c.skipEmptyRow {
-			if strings.Join(list, "") == "" {
-				continue
+		if !c.enableAsync {
+			err = doExec(c, index, fun1, fun2, col)
+			if err != nil {
+				c.err = err
 			}
-		}
-		if c.minCol > 0 {
-			for range c.minCol - len(list) {
-				list = append(list, "")
-			}
-		}
-
-		if c.convertFunc != nil {
-			list, err = c.convertFunc(c.currentIndex, list)
+		} else {
+			err = pool.Submit(func() {
+				defer func() {
+					err := recover()
+					if err != nil {
+						c.err = err.(error)
+						return
+					}
+				}()
+				err = doExec(c, index, fun1, fun2, col)
+				if err != nil {
+					c.err = err
+				}
+			})
 			if err != nil {
 				return err
 			}
 		}
+	}
+	return nil
+}
+func doExec[T any](
+	c *ExcelReadContext,
+	index int,
+	fun1 func(index int, row []string) error,
+	fun2 func(index int, row []string, t T, err []CellErr) error,
 
-		var e error = nil
-		if fun1 != nil {
-			e = fun1(c.currentIndex, list)
-		} else if fun2 != nil {
-			t, errList := parse[T](c, list)
-			e = fun2(c.currentIndex, list, t, errList)
-		} else {
-			return errors.New("fun1 or fun2 is nil")
+	col []string) error {
+	var err error
+	var list = make([]string, 0)
+	for _, v := range col {
+		list = append(list, strings.TrimSpace(v))
+	}
+
+	if c.skipEmptyRow {
+		if strings.Join(list, "") == "" {
+			return nil
 		}
-
-		if e != nil {
-			if errors.Is(e, ErrExcelPStop) {
-				return nil
-			}
-			return e
+	}
+	if c.minCol > 0 {
+		for range c.minCol - len(list) {
+			list = append(list, "")
 		}
 	}
 
+	if c.convertFunc != nil {
+		list, err = c.convertFunc(index, list)
+		if err != nil {
+			return err
+		}
+	}
+
+	var e error = nil
+	if fun1 != nil {
+		e = fun1(index, list)
+	} else if fun2 != nil {
+		t, errList := parse[T](c, list)
+		e = fun2(index, list, t, errList)
+	} else {
+		return errors.New("fun1 or fun2 is nil")
+	}
+
+	if e != nil {
+		if errors.Is(e, ErrExcelPStop) {
+			return nil
+		}
+		return e
+	}
 	return nil
 }

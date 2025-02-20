@@ -2,6 +2,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gofrs/uuid v4.4.0+incompatible h1:3qXRTX8/NbyulANqlc0lchS1gqAVxRgsuW1YrTJupqA=
 github.com/gofrs/uuid v4.4.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
+github.com/lontten/lcore v0.0.0-20250220073918-14766f69f2fe h1:f+kcyrL0UC8DAUYGVnT3uF3UlBItRdUT6NLsP+mfWm8=
+github.com/lontten/lcore v0.0.0-20250220073918-14766f69f2fe/go.mod h1:TUmisk6vtHYBkLbWvDneQkK/sIENcEUNLtkHJgV/sxc=
+github.com/lontten/lcore v0.0.0-20250220081552-88e28944cfd4 h1:vvvNPqdmRgC7VhaMwdpCWPXEJjtLtHykw7Q0xpTzhkc=
+github.com/lontten/lcore v0.0.0-20250220081552-88e28944cfd4/go.mod h1:TUmisk6vtHYBkLbWvDneQkK/sIENcEUNLtkHJgV/sxc=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
