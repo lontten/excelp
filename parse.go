@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/lontten/excelp/utils"
 	"github.com/pkg/errors"
+	"github.com/xuri/excelize/v2"
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func parse[T any](c *ExcelReadContext, index int, row []string) (T, []CellErr) {
@@ -57,8 +57,21 @@ func scanField(field reflect.Value, value string, f Field) error {
 	// 尝试调用字段的 Scan 方法
 	if scanner, ok := field.Addr().Interface().(sql.Scanner); ok {
 		var src any = value
+
 		if field.Kind() == reflect.Slice && field.Type().Elem().Kind() == reflect.Uint8 {
 			src = []byte(value)
+		} else {
+			if utils.IsTimeType(field) {
+				timeFloat, err := strconv.ParseFloat(value, 64)
+				if err != nil {
+					return fmt.Errorf("can not convert %v to time.Time", value)
+				}
+				t, err := excelize.ExcelDateToTime(timeFloat, false)
+				if err != nil {
+					return fmt.Errorf("can not convert %v to time.Time", value)
+				}
+				src = t
+			}
 		}
 		if err := scanner.Scan(src); err != nil {
 			return fmt.Errorf("scan failed for field %s: %v", field.Type().Name(), err)
@@ -100,13 +113,16 @@ func scanField(field reflect.Value, value string, f Field) error {
 	case reflect.Struct:
 		switch field.Type().Name() {
 		case "Time":
-			t, err := time.Parse(f.timeFormat, value)
+			timeFloat, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return fmt.Errorf("can not convert %v to time.Time", value)
+			}
+			t, err := excelize.ExcelDateToTime(timeFloat, false)
 			if err != nil {
 				return fmt.Errorf("can not convert %v to time.Time", value)
 			}
 			field.Set(reflect.ValueOf(t))
 		}
-
 	default:
 		fmt.Println("field:", field.Type().Name(), "kind:", field.Kind().String())
 		return fmt.Errorf("unsupported field type: %s, kind: %s", field.Type().Name(), field.Kind().String())
