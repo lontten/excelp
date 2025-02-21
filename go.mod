@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/lontten/lcore v0.0.0-20250220081552-88e28944cfd4
+	github.com/lontten/lcore v0.0.0-20250221032034-a7f3a8ab59b6
 	github.com/pkg/errors v0.9.1
 	github.com/shopspring/decimal v1.4.0
 	github.com/xuri/excelize/v2 v2.9.0
