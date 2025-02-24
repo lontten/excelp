@@ -114,6 +114,15 @@ func doExec[T any](
 		}
 	}
 
+	for i, f := range c.cellConvertFuncMap {
+		s := list[i]
+		s, err = f(s)
+		if err != nil {
+			return err
+		}
+		list[i] = s
+	}
+
 	var e error = nil
 	if fun1 != nil {
 		e = fun1(index, list)

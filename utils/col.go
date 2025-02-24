@@ -125,6 +125,7 @@ var ColumnNumberToNameCache = map[int]string{
 	154: "EY", 155: "EZ",
 }
 
+// index 从0开始
 func ColumnNameToNumber(name string) (int, error) {
 	if v, ok := ColumnNameToNumberCache[name]; ok {
 		return v, nil
@@ -137,6 +138,7 @@ func ColumnNameToNumber(name string) (int, error) {
 	return 0, err
 }
 
+// index 从0开始
 func ColumnNumberToName(num int) (string, error) {
 	if v, ok := ColumnNumberToNameCache[num]; ok {
 		return v, nil

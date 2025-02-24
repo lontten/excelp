@@ -2,6 +2,7 @@ package excelp
 
 import (
 	"errors"
+	"github.com/lontten/excelp/utils"
 	"github.com/lontten/lcore"
 	"github.com/xuri/excelize/v2"
 	"os"
@@ -22,7 +23,8 @@ type ExcelReadContext struct {
 	err          error
 
 	// ------ 自定义 -----
-	convertFunc func(index int, row []string) ([]string, error)
+	convertFunc        func(index int, col []string) ([]string, error)
+	cellConvertFuncMap map[int]func(col string) (string, error)
 
 	// ------ T -----
 	scanDest any
@@ -44,7 +46,8 @@ type Field struct {
 
 func ExcelRead() *ExcelReadContext {
 	return &ExcelReadContext{
-		skipEmptyRow: true,
+		skipEmptyRow:       true,
+		cellConvertFuncMap: make(map[int]func(col string) (string, error)),
 	}
 }
 
@@ -147,9 +150,20 @@ func (c *ExcelReadContext) ColNum(num int) *ExcelReadContext {
 	return c
 }
 
-// Convert 配置数据转换函数
-func (c *ExcelReadContext) Convert(fun func(index int, row []string) ([]string, error)) *ExcelReadContext {
+// Convert 行转换函数
+func (c *ExcelReadContext) Convert(fun func(index int, col []string) ([]string, error)) *ExcelReadContext {
 	c.convertFunc = fun
+	return c
+}
+
+// col 列名，列转化函数
+func (c *ExcelReadContext) ConvertCell(col string, fun func(col string) (string, error)) *ExcelReadContext {
+	number, err := utils.ColumnNameToNumber(col)
+	if err != nil {
+		c.err = err
+		return c
+	}
+	c.cellConvertFuncMap[number] = fun
 	return c
 }
 
