@@ -2,6 +2,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gofrs/uuid v4.4.0+incompatible h1:3qXRTX8/NbyulANqlc0lchS1gqAVxRgsuW1YrTJupqA=
 github.com/gofrs/uuid v4.4.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
+github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs4luLUK2k=
+github.com/hashicorp/golang-lru/v2 v2.0.7/go.mod h1:QeFd9opnmA6QUJc5vARoKUSoFhyfM2/ZepoAG6RGpeM=
 github.com/lontten/lcore v0.0.0-20250220073918-14766f69f2fe h1:f+kcyrL0UC8DAUYGVnT3uF3UlBItRdUT6NLsP+mfWm8=
 github.com/lontten/lcore v0.0.0-20250220073918-14766f69f2fe/go.mod h1:TUmisk6vtHYBkLbWvDneQkK/sIENcEUNLtkHJgV/sxc=
 github.com/lontten/lcore v0.0.0-20250220081552-88e28944cfd4 h1:vvvNPqdmRgC7VhaMwdpCWPXEJjtLtHykw7Q0xpTzhkc=
@@ -12,6 +14,8 @@ github.com/lontten/lcore v0.0.0-20250221072621-6147a1565d63 h1:FWJfOF1XSSzrv2JEX
 github.com/lontten/lcore v0.0.0-20250221072621-6147a1565d63/go.mod h1:TUmisk6vtHYBkLbWvDneQkK/sIENcEUNLtkHJgV/sxc=
 github.com/lontten/lcore v0.0.0-20250221074728-f74ad61ea8d0 h1:5MC+17s0VLEzKOlp1XM22LTtA1agG1KbHrYUqulB+Z0=
 github.com/lontten/lcore v0.0.0-20250221074728-f74ad61ea8d0/go.mod h1:TUmisk6vtHYBkLbWvDneQkK/sIENcEUNLtkHJgV/sxc=
+github.com/lontten/lcore v0.0.0-20250224082636-82d1ad3eec6f h1:2u7dA03dVUL2EGVgPALS2WOsHle/+hCDVsJOtn1TcHw=
+github.com/lontten/lcore v0.0.0-20250224082636-82d1ad3eec6f/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
