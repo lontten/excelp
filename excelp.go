@@ -1,6 +1,7 @@
 package excelp
 
 import (
+	"github.com/lontten/excelp/utils"
 	"github.com/lontten/lcore"
 	"github.com/pkg/errors"
 	"strings"
@@ -8,7 +9,7 @@ import (
 
 func Read(
 	c *ExcelReadContext,
-	fun func(index int, row []string) error,
+	fun func(index int, row []string, err []CellErr) error,
 ) error {
 	return read[int](c, fun, nil)
 }
@@ -22,7 +23,7 @@ func ReadModel[T any](
 
 func read[T any](
 	c *ExcelReadContext,
-	fun1 func(index int, row []string) error,
+	fun1 func(index int, row []string, err []CellErr) error,
 	fun2 func(index int, row []string, t T, err []CellErr) error,
 ) error {
 	if c == nil {
@@ -88,7 +89,7 @@ func read[T any](
 func doExec[T any](
 	c *ExcelReadContext,
 	index int,
-	fun1 func(index int, row []string) error,
+	fun1 func(index int, row []string, err []CellErr) error,
 	fun2 func(index int, row []string, t T, err []CellErr) error,
 
 	col []string) error {
@@ -108,29 +109,46 @@ func doExec[T any](
 			list = append(list, "")
 		}
 	}
+	var cellErrList = make([]CellErr, 0)
 
 	if c.convertFunc != nil {
 		list, err = c.convertFunc(index, list)
 		if err != nil {
-			return err
+			cellErrList = append(cellErrList, CellErr{
+				Col:   "",
+				Err:   err.Error(),
+				Row:   index,
+				Value: "",
+			})
 		}
 	}
 
-	for i, f := range c.cellConvertFuncMap {
-		s := list[i]
-		s, err = f(s)
-		if err != nil {
-			return err
+	if len(cellErrList) == 0 {
+		for i, f := range c.cellConvertFuncMap {
+			source := list[i]
+			target, err := f(source)
+			if err != nil {
+				numberToName, _ := utils.ColumnNumberToName(i)
+				cellErrList = append(cellErrList, CellErr{
+					Col:   numberToName,
+					Err:   err.Error(),
+					Row:   index,
+					Value: source,
+				})
+			}
+			list[i] = target
 		}
-		list[i] = s
 	}
 
 	var e error = nil
 	if fun1 != nil {
-		e = fun1(index, list)
+		e = fun1(index, list, cellErrList)
 	} else if fun2 != nil {
-		t, errList := parse[T](c, index, list)
-		e = fun2(index, list, t, errList)
+		var t T
+		if len(cellErrList) == 0 {
+			t, cellErrList = parse[T](c, index, list)
+		}
+		e = fun2(index, list, t, cellErrList)
 	} else {
 		return errors.New("fun1 or fun2 is nil")
 	}

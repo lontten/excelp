@@ -46,7 +46,7 @@
 			bytes, _ := json.Marshal(user)
 			fmt.Println(index, string(bytes))
 		}
-		return nil
+		return nil //这里返回err，ReadModel会在读取新一行前，检查err并返回
 	})
 	if err != nil {
 		fmt.Println(err)
