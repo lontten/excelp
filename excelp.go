@@ -39,8 +39,10 @@ func read[T any](
 		defer pool.Shutdown()
 	}
 
-	dest := new(T)
-	c.initModel(dest)
+	if fun2 != nil {
+		dest := new(T)
+		c.initModel(dest)
+	}
 
 	rows := c.rows
 	for rows.Next() {

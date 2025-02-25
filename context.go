@@ -102,8 +102,9 @@ func (c *ExcelReadContext) Sheet(sheet string) *ExcelReadContext {
 	return c
 }
 
-// TimeRow 设置为时间格式
-func (c *ExcelReadContext) TimeRow(col ...string) *ExcelReadContext {
+// DateCol 设置为时间格式
+// yyyy-MM-dd
+func (c *ExcelReadContext) DateCol(col ...string) *ExcelReadContext {
 	if c.excelFile == nil {
 		c.err = errors.New("no set excel")
 		return c
@@ -112,9 +113,56 @@ func (c *ExcelReadContext) TimeRow(col ...string) *ExcelReadContext {
 		c.err = errors.New("no set sheet")
 		return c
 	}
-	styleID, _ := c.excelFile.NewStyle(&excelize.Style{NumFmt: 0}) // 常规格式
+
+	styleID, _ := c.excelFile.NewStyle(TimeFormat[1])
 	for _, s := range col {
-		err := c.excelFile.SetColStyle(*c.sheet, s, styleID) // 设置列为常规格式
+		err := c.excelFile.SetColStyle(*c.sheet, s, styleID)
+		if err != nil {
+			c.err = err
+			return c
+		}
+	}
+	return c
+}
+
+// TimeCol 设置为时间格式
+// yyyy-MM-dd HH:mm:ss
+func (c *ExcelReadContext) TimeCol(col ...string) *ExcelReadContext {
+	if c.excelFile == nil {
+		c.err = errors.New("no set excel")
+		return c
+	}
+	if c.sheet == nil {
+		c.err = errors.New("no set sheet")
+		return c
+	}
+
+	styleID, _ := c.excelFile.NewStyle(TimeFormat[2])
+	for _, s := range col {
+		err := c.excelFile.SetColStyle(*c.sheet, s, styleID)
+		if err != nil {
+			c.err = err
+			return c
+		}
+	}
+	return c
+}
+
+// DateTimeCol 设置为时间格式
+// yyyy-MM-dd HH:mm:ss
+func (c *ExcelReadContext) DateTimeCol(col ...string) *ExcelReadContext {
+	if c.excelFile == nil {
+		c.err = errors.New("no set excel")
+		return c
+	}
+	if c.sheet == nil {
+		c.err = errors.New("no set sheet")
+		return c
+	}
+
+	styleID, _ := c.excelFile.NewStyle(TimeFormat[3])
+	for _, s := range col {
+		err := c.excelFile.SetColStyle(*c.sheet, s, styleID)
 		if err != nil {
 			c.err = err
 			return c
