@@ -20,6 +20,8 @@ github.com/lontten/lcore v0.0.0-20250226072142-22f1834fffcc h1:Bf2ueeRe0owiXCeYi
 github.com/lontten/lcore v0.0.0-20250226072142-22f1834fffcc/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
 github.com/lontten/lcore v0.0.0-20250226081339-027449a0e4f9 h1:OTkxM6guBdupo2WeZ+QLRTHY5CRTzzUiKbINfSrk8EM=
 github.com/lontten/lcore v0.0.0-20250226081339-027449a0e4f9/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
+github.com/lontten/lcore v0.0.0-20250226103403-3c5d48842634 h1:Cp8+A+0wUf9qyZ54a3Jn3+9pAS8hwm9jqSJIoKQkdO0=
+github.com/lontten/lcore v0.0.0-20250226103403-3c5d48842634/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
