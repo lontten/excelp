@@ -14,6 +14,10 @@ func Write(c *ExcelWriteContext, col []string) error {
 	if c == nil {
 		return errors.New("ExcelWriteContext is nil")
 	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if c.err != nil {
 		return c.err
 	}
