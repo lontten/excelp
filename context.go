@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/lontten/excelp/utils"
 	"github.com/lontten/lcore"
+	"github.com/lontten/lcore/types"
 	"github.com/xuri/excelize/v2"
 	"os"
 	"reflect"
@@ -46,6 +47,7 @@ type Field struct {
 
 func ExcelRead() *ExcelReadContext {
 	return &ExcelReadContext{
+		sheet:              types.NewString("Sheet1"),
 		skipEmptyRow:       true,
 		cellConvertFuncMap: make(map[int]func(col string) (string, error)),
 	}

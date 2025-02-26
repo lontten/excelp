@@ -60,12 +60,7 @@ func read[T any](
 			return err
 		}
 
-		if !c.enableAsync {
-			err = doExec(c, index, fun1, fun2, col)
-			if err != nil {
-				c.err = err
-			}
-		} else {
+		if pool != nil {
 			err = pool.Submit(func() {
 				defer func() {
 					err := recover()
@@ -82,6 +77,11 @@ func read[T any](
 			if err != nil {
 				return err
 			}
+			continue
+		}
+		err = doExec(c, index, fun1, fun2, col)
+		if err != nil {
+			c.err = err
 		}
 	}
 	return nil
