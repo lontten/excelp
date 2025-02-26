@@ -8,7 +8,6 @@ import (
 	"github.com/xuri/excelize/v2"
 	"os"
 	"reflect"
-	"sync"
 )
 
 type ExcelWriteContext struct {
@@ -18,7 +17,6 @@ type ExcelWriteContext struct {
 	sheetIndex *int
 	file       *os.File
 	excelFile  *excelize.File
-	mu         sync.Mutex
 
 	err          error
 	currentIndex int // excel 的 行标
@@ -37,7 +35,6 @@ type ExcelWriteContext struct {
 func ExcelWrite() *ExcelWriteContext {
 	return &ExcelWriteContext{
 		sheet:              types.NewString("Sheet1"),
-		mu:                 sync.Mutex{},
 		cellConvertFuncMap: make(map[int]func(col string) (string, error)),
 	}
 }
