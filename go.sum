@@ -24,6 +24,8 @@ github.com/lontten/lcore v0.0.0-20250226103403-3c5d48842634 h1:Cp8+A+0wUf9qyZ54a
 github.com/lontten/lcore v0.0.0-20250226103403-3c5d48842634/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
 github.com/lontten/lcore v0.0.0-20250228083158-13ff810ec675 h1:fc6mTSThqM5Y6T6wcaCy8SxUov3z16mg8SxSPly3tDk=
 github.com/lontten/lcore v0.0.0-20250228083158-13ff810ec675/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
+github.com/lontten/lcore v0.1.0-alpha.1 h1:yUPZFYV1hqWMtreLLrbn9jacdJufp0obu6WjoH0aZxA=
+github.com/lontten/lcore v0.1.0-alpha.1/go.mod h1:WpMntNrwILl/L5Ly8VH6p0qWmCuAapayzIMAq703yIY=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
