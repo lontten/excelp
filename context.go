@@ -22,6 +22,7 @@ type ExcelReadContext struct {
 	skipEmptyRow bool // 默认跳过空行
 	minCol       int
 	err          error
+	panic        bool
 
 	// ------ 自定义 -----
 	convertFunc        func(index int, col []string) ([]string, error)
@@ -176,6 +177,11 @@ func (c *ExcelReadContext) DateTimeCol(col ...string) *ExcelReadContext {
 // Skip 跳过几行
 func (c *ExcelReadContext) Skip(num int) *ExcelReadContext {
 	c.skip = num
+	return c
+}
+
+func (c *ExcelReadContext) Panic() *ExcelReadContext {
+	c.panic = true
 	return c
 }
 

@@ -62,13 +62,16 @@ func read[T any](
 
 		if pool != nil {
 			err = pool.Submit(func() {
-				defer func() {
-					err := recover()
-					if err != nil {
-						c.err = err.(error)
-						return
-					}
-				}()
+				if !c.panic {
+					defer func() {
+						err := recover()
+						if err != nil {
+							c.err = err.(error)
+							return
+						}
+					}()
+				}
+
 				err = doExec(c, index, fun1, fun2, col)
 				if err != nil {
 					c.err = err
