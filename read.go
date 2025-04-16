@@ -33,10 +33,9 @@ func read[T any](
 	if c.err != nil {
 		return c.err
 	}
-	var pool *lcore.ThreadPool
+	var pool *lcore.Pool
 	if c.enableAsync {
-		pool = lcore.NewThreadPool(c.maxLine, c.waitLine, c.rejectPolicy)
-		pool.Start()
+		pool = lcore.NewPool(c.maxLine, c.waitLine, c.rejectPolicy)
 		defer pool.Shutdown()
 	}
 
