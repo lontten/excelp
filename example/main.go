@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/lontten/excelp"
-	"github.com/lontten/lcore"
 )
 
 func main() {
@@ -13,7 +12,7 @@ func main() {
 	readContext := excelp.ExcelRead().
 		Url("./excelp_demo.xlsx").
 		Sheet("Sheet1").
-		EnableAsync(2, 2, lcore.CallerRunsPolicy).
+		EnableAsync(2).
 		ColNum(3).
 		Skip(1) //跳过第一行
 

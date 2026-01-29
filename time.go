@@ -1,7 +1,7 @@
 package excelp
 
 import (
-	"github.com/lontten/lcore/types"
+	"github.com/lontten/lcore/v2/types"
 	"github.com/xuri/excelize/v2"
 )
 

@@ -6,8 +6,8 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/lontten/lcore/lcutils"
-	"github.com/lontten/lcore/types"
+	"github.com/lontten/lcore/v2/types"
+	"github.com/lontten/lutil/lcutils"
 	"github.com/xuri/excelize/v2"
 )
 
