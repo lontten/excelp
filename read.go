@@ -1,10 +1,11 @@
 package excelp
 
 import (
-	"github.com/lontten/excelp/utils"
-	"github.com/lontten/lcore"
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/lontten/excelp/utils"
+	"github.com/lontten/lutil"
+	"github.com/pkg/errors"
 )
 
 func Read(
@@ -33,9 +34,9 @@ func read[T any](
 	if c.err != nil {
 		return c.err
 	}
-	var pool *lcore.Pool
-	if c.enableAsync {
-		pool = lcore.NewPool(c.maxLine, c.waitLine, c.rejectPolicy)
+	var pool *lutil.Pool
+	if c.maxLine > 0 {
+		pool = lutil.NewPool(c.maxLine, 1, nil)
 		defer pool.Shutdown()
 	}
 
@@ -60,12 +61,12 @@ func read[T any](
 		}
 
 		if pool != nil {
-			err = pool.Submit(func() {
+			pool.Submit(func() {
 				if !c.panic {
 					defer func() {
-						err := recover()
-						if err != nil {
-							c.err = err.(error)
+						r := recover()
+						if r != nil {
+							c.err = r.(error)
 							return
 						}
 					}()
@@ -76,14 +77,11 @@ func read[T any](
 					c.err = err
 				}
 			})
+		} else {
+			err = doExec(c, index, fun1, fun2, col)
 			if err != nil {
-				return err
+				c.err = err
 			}
-			continue
-		}
-		err = doExec(c, index, fun1, fun2, col)
-		if err != nil {
-			c.err = err
 		}
 	}
 	return nil

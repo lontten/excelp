@@ -3,12 +3,13 @@ package excelp
 import (
 	"database/sql"
 	"fmt"
-	"github.com/lontten/excelp/utils"
-	"github.com/pkg/errors"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lontten/excelp/utils"
+	"github.com/pkg/errors"
 )
 
 func parse[T any](c *ExcelReadContext, index int, row []string) (T, []CellErr) {

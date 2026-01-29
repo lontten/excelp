@@ -1,16 +1,17 @@
 package utils
 
 import (
-	"github.com/lontten/lcore/types"
 	"reflect"
 	"time"
+
+	"github.com/lontten/lcore/v2/types"
 )
 
 var timeMap = map[reflect.Type]bool{
-	reflect.TypeOf(types.Date{}):     true,
-	reflect.TypeOf(types.Time{}):     true,
-	reflect.TypeOf(types.DateTime{}): true,
-	reflect.TypeOf(time.Time{}):      true,
+	reflect.TypeOf(types.LocalDate{}):     true,
+	reflect.TypeOf(types.LocalTime{}):     true,
+	reflect.TypeOf(types.LocalDateTime{}): true,
+	reflect.TypeOf(time.Time{}):           true,
 }
 
 func IsTimeType(v reflect.Value) bool {

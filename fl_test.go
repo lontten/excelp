@@ -2,12 +2,13 @@ package excelp
 
 import (
 	"fmt"
-	"github.com/gofrs/uuid"
-	"github.com/shopspring/decimal"
-	"github.com/xuri/excelize/v2"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
+	"github.com/shopspring/decimal"
+	"github.com/xuri/excelize/v2"
 )
 
 type User struct {

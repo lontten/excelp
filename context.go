@@ -2,12 +2,12 @@ package excelp
 
 import (
 	"errors"
-	"github.com/lontten/excelp/utils"
-	"github.com/lontten/lcore"
-	"github.com/lontten/lcore/types"
-	"github.com/xuri/excelize/v2"
 	"os"
 	"reflect"
+
+	"github.com/lontten/excelp/utils"
+	"github.com/lontten/lcore/v2/types"
+	"github.com/xuri/excelize/v2"
 )
 
 type ExcelReadContext struct {
@@ -35,11 +35,8 @@ type ExcelReadContext struct {
 	m        map[int]Field
 
 	// ------ line -----
-	enableAsync bool
 	// 启用多线程
-	maxLine      int
-	waitLine     int
-	rejectPolicy lcore.RejectPolicy // 拒绝策略
+	maxLine int
 }
 type Field struct {
 	name     string
@@ -192,11 +189,8 @@ func (c *ExcelReadContext) SkipEmpty() *ExcelReadContext {
 }
 
 // EnableAsync 启用异步
-func (c *ExcelReadContext) EnableAsync(maxWorkers int, queueSize int, rejectPolicy lcore.RejectPolicy) *ExcelReadContext {
-	c.enableAsync = true
+func (c *ExcelReadContext) EnableAsync(maxWorkers int) *ExcelReadContext {
 	c.maxLine = maxWorkers
-	c.waitLine = queueSize
-	c.rejectPolicy = rejectPolicy
 	return c
 }
 

@@ -1,9 +1,10 @@
 package excelp
 
 import (
+	"strconv"
+
 	"github.com/lontten/excelp/utils"
 	"github.com/pkg/errors"
-	"strconv"
 )
 
 func WriteModel[T any](t T) error {

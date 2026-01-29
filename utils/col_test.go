@@ -2,8 +2,9 @@ package utils
 
 import (
 	"fmt"
-	"github.com/xuri/excelize/v2"
 	"testing"
+
+	"github.com/xuri/excelize/v2"
 )
 
 func TestColumnNameToNumber(t *testing.T) {
