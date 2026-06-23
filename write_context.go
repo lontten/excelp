@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/lontten/lcore/v2/types"
-	"github.com/lontten/lutil/lcutils"
+	"github.com/lontten/lutil/fileutil"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -57,7 +57,7 @@ func (c *ExcelWriteContext) initModel(dest any) *ExcelWriteContext {
 
 func (c *ExcelWriteContext) Template(path string) *ExcelWriteContext {
 	c.template = &path
-	file, err := lcutils.CopyTemplateToTempFile(path)
+	file, err := fileutil.CopyTemplateToTempFile(path)
 	if err != nil {
 		c.err = err
 		return c
