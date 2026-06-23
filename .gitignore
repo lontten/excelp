@@ -3,3 +3,4 @@ coverage.txt
 vendor
 .vscode
 .DS_Store
+*.exe
