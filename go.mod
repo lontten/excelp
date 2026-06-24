@@ -4,8 +4,8 @@ go 1.25.0
 
 require (
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/lontten/lcore/v2 v2.23.0
-	github.com/lontten/lutil v0.2.1
+	github.com/lontten/lcore/v2 v2.23.1
+	github.com/lontten/lutil v0.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/shopspring/decimal v1.4.0
 	github.com/xuri/excelize/v2 v2.10.0
