@@ -10,19 +10,22 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+// ExcelReadContext 是 Excel 读取的链式配置上下文，配合 Read 或 ReadModel 使用。
+//
+// 通过 Url、Sheet、Skip、ColNum 等方法配置后，调用 Read/ReadModel 开始逐行读取。
 type ExcelReadContext struct {
-	currentIndex int // excel 的 行标
+	currentIndex int // Excel 行号，从 1 开始递增
 	url          *string
 	sheet        *string
 	sheetIndex   *int
 	file         *os.File
 	excelFile    *excelize.File
 	rows         *excelize.Rows
-	skip         int
-	skipEmptyRow bool // 默认跳过空行
-	colNum       int
+	skip         int  // 跳过的行数（从第 1 行起计）
+	skipEmptyRow bool // 是否跳过全空行，默认 true
+	colNum       int  // 固定列数，0 表示不处理
 	err          error
-	panic        bool
+	panic        bool // 异步模式下是否允许 panic 向上抛出
 
 	// ------ 自定义 -----
 	convertFunc        func(index int, col []string) ([]string, error)
@@ -35,14 +38,14 @@ type ExcelReadContext struct {
 	m        map[int]Field
 
 	// ------ line -----
-	// 启用多线程
-	maxLine int
+	maxLine int // 异步 worker 数量，0 表示同步读取
 }
 type Field struct {
 	name     string
 	required bool // 是否必填
 }
 
+// ExcelRead 创建读取上下文，默认 Sheet 为 Sheet1，默认跳过空行。
 func ExcelRead() *ExcelReadContext {
 	return &ExcelReadContext{
 		sheet:              types.NewString("Sheet1"),
@@ -86,6 +89,7 @@ func (c *ExcelReadContext) initRows() *ExcelReadContext {
 	return c
 }
 
+// Url 设置 Excel 文件路径并打开文件，支持链式调用。
 func (c *ExcelReadContext) Url(url string) *ExcelReadContext {
 	c.url = &url
 	f, err := excelize.OpenFile(url)
@@ -97,6 +101,7 @@ func (c *ExcelReadContext) Url(url string) *ExcelReadContext {
 	return c
 }
 
+// Sheet 设置要读取的工作表名称，支持链式调用。
 func (c *ExcelReadContext) Sheet(sheet string) *ExcelReadContext {
 	c.sheet = &sheet
 	return c
@@ -171,42 +176,47 @@ func (c *ExcelReadContext) DateTimeCol(col ...string) *ExcelReadContext {
 	return c
 }
 
-// Skip 跳过几行
+// Skip 设置跳过的行数，从第 1 行起计（常用于跳过表头），支持链式调用。
 func (c *ExcelReadContext) Skip(num int) *ExcelReadContext {
 	c.skip = num
 	return c
 }
 
+// Panic 允许异步读取时 panic 向上抛出（默认会 recover），支持链式调用。
 func (c *ExcelReadContext) Panic() *ExcelReadContext {
 	c.panic = true
 	return c
 }
 
-// SkipEmpty 跳过空行
+// SkipEmpty 启用跳过全空行，支持链式调用。
 func (c *ExcelReadContext) SkipEmpty() *ExcelReadContext {
 	c.skipEmptyRow = true
 	return c
 }
 
-// EnableAsync 启用异步
+// EnableAsync 启用异步读取，maxWorkers 为并发 worker 数量，支持链式调用。
 func (c *ExcelReadContext) EnableAsync(maxWorkers int) *ExcelReadContext {
 	c.maxLine = maxWorkers
 	return c
 }
 
-// ColNum 设置固定列数：不足时填充空字符串，超出时截断
+// ColNum 设置每行固定列数，支持链式调用。
+//
+// 当实际列数少于 num 时，在末尾填充空字符串；
+// 当实际列数多于 num 时，截断保留前 num 列；
+// num 为 0 或未设置时不做处理。
 func (c *ExcelReadContext) ColNum(num int) *ExcelReadContext {
 	c.colNum = num
 	return c
 }
 
-// Convert 行转换函数
+// Convert 设置整行转换函数，在列归一化之后、单元格转换之前执行，支持链式调用。
 func (c *ExcelReadContext) Convert(fun func(index int, col []string) ([]string, error)) *ExcelReadContext {
 	c.convertFunc = fun
 	return c
 }
 
-// col 列名，列转化函数
+// ConvertCell 为指定列（如 "A"、"B"）设置单元格转换函数，支持链式调用。
 func (c *ExcelReadContext) ConvertCell(col string, fun func(col string) (string, error)) *ExcelReadContext {
 	number, err := utils.ColumnNameToNumber(col)
 	if err != nil {
@@ -217,7 +227,7 @@ func (c *ExcelReadContext) ConvertCell(col string, fun func(col string) (string,
 	return c
 }
 
-// Close 关闭文件
+// Close 关闭已打开的 Excel 文件及关联资源。
 func (c *ExcelReadContext) Close() error {
 	if c.excelFile != nil {
 		err := c.excelFile.Close()

@@ -8,6 +8,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Read 逐行读取 Excel，对每一行调用 fun。
+//
+// index 为 Excel 行号，从 1 开始；row 为当前行各列字符串，已去除首尾空格，
+// 且若配置了 ColNum 则已做列数归一化（不足补空、超出截断）。
+// err 为当前行的单元格级错误列表，可能为空。
 func Read(
 	c *ExcelReadContext,
 	fun func(index int, row []string, err []CellErr) error,
@@ -15,6 +20,10 @@ func Read(
 	return read[int](c, fun, nil)
 }
 
+// ReadModel 逐行读取 Excel 并映射到泛型结构体 T，对每一行调用 fun。
+//
+// 参数语义与 Read 相同；t 为解析后的结构体值。
+// 当 err 非空时跳过 parse，t 为零值。
 func ReadModel[T any](
 	c *ExcelReadContext,
 	fun func(index int, row []string, t T, err []CellErr) error,
@@ -86,6 +95,8 @@ func read[T any](
 	}
 	return nil
 }
+// normalizeCol 将 list 归一化为固定 colNum 列：不足时末尾补空字符串，超出时截断。
+// colNum <= 0 时不做处理，原样返回。
 func normalizeCol(list []string, colNum int) []string {
 	if colNum <= 0 {
 		return list
@@ -100,6 +111,7 @@ func normalizeCol(list []string, colNum int) []string {
 	return list
 }
 
+// doExec 处理单行数据：TrimSpace → SkipEmpty → ColNum → Convert/ConvertCell → parse → 回调。
 func doExec[T any](
 	c *ExcelReadContext,
 	index int,

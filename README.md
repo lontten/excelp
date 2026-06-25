@@ -7,7 +7,7 @@
     readContext := excelp.ExcelRead().
         Url("./excelp_demo.xlsx").
         Sheet("Sheet1").
-        MinCol(3).// 给row 设置最小列数，填充默认空字符
+        ColNum(3).// 固定列数：不足补空、超出截断
         Skip(1) //跳过第一行
     
     defer readContext.Close()
@@ -24,7 +24,7 @@
 
 ```
     type User struct {
-        ID   types.UUID `json:"id"  tableName:"public.t_user"`
+        ID   types.UUID `json:"id""`
         Name string     `json:"info"`
         Age  int        `json:"age"`
     }
@@ -33,7 +33,7 @@
     readContext := excelp.ExcelRead().
         Url("./excelp_demo.xlsx").
         Sheet("Sheet1").
-        MinCol(3).
+        ColNum(3).
         Skip(1) //跳过第一行
     
     defer readContext.Close()
