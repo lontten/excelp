@@ -86,6 +86,20 @@ func read[T any](
 	}
 	return nil
 }
+func normalizeCol(list []string, colNum int) []string {
+	if colNum <= 0 {
+		return list
+	}
+	if len(list) < colNum {
+		for range colNum - len(list) {
+			list = append(list, "")
+		}
+	} else if len(list) > colNum {
+		list = list[:colNum]
+	}
+	return list
+}
+
 func doExec[T any](
 	c *ExcelReadContext,
 	index int,
@@ -104,11 +118,7 @@ func doExec[T any](
 			return nil
 		}
 	}
-	if c.minCol > 0 {
-		for range c.minCol - len(list) {
-			list = append(list, "")
-		}
-	}
+	list = normalizeCol(list, c.colNum)
 	var cellErrList = make([]CellErr, 0)
 
 	if c.convertFunc != nil {

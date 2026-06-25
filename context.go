@@ -20,7 +20,7 @@ type ExcelReadContext struct {
 	rows         *excelize.Rows
 	skip         int
 	skipEmptyRow bool // 默认跳过空行
-	minCol       int
+	colNum       int
 	err          error
 	panic        bool
 
@@ -194,9 +194,9 @@ func (c *ExcelReadContext) EnableAsync(maxWorkers int) *ExcelReadContext {
 	return c
 }
 
-// ColNum 设置 列数，当列数不足，会填充空字符串
+// ColNum 设置固定列数：不足时填充空字符串，超出时截断
 func (c *ExcelReadContext) ColNum(num int) *ExcelReadContext {
-	c.minCol = num
+	c.colNum = num
 	return c
 }
 
