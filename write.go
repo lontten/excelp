@@ -21,10 +21,14 @@ func Write(c *ExcelWriteContext, col []string) error {
 	if c.excelFile == nil {
 		return errors.New("template err")
 	}
+	sheetName, err := c.sheetName()
+	if err != nil {
+		return err
+	}
 	c.currentIndex++
 	for i, s := range col {
 		name, _ := utils.ColumnNumberToName(i)
-		err := c.excelFile.SetCellValue(*c.sheet, name+strconv.Itoa(c.currentIndex), s)
+		err := c.excelFile.SetCellValue(sheetName, name+strconv.Itoa(c.currentIndex), s)
 		if err != nil {
 			return err
 		}

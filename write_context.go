@@ -72,9 +72,27 @@ func (c *ExcelWriteContext) Template(path string) *ExcelWriteContext {
 	return c
 }
 
-func (c *ExcelWriteContext) Sheet(sheet string) *ExcelWriteContext {
-	c.sheet = &sheet
+// SheetName 按名称设置要写入的工作表，与 SheetIndex 互斥，后调用者生效。
+func (c *ExcelWriteContext) SheetName(name string) *ExcelWriteContext {
+	c.sheet = &name
+	c.sheetIndex = nil
 	return c
+}
+
+// SheetIndex 按下标设置要写入的工作表，下标从 1 开始（1 表示第一个工作表），与 SheetName 互斥。
+//
+// 需在 Template 打开文件后才能解析实际工作表名称。
+func (c *ExcelWriteContext) SheetIndex(index int) *ExcelWriteContext {
+	c.sheetIndex = &index
+	c.sheet = nil
+	return c
+}
+
+func (c *ExcelWriteContext) sheetName() (string, error) {
+	if c.err != nil {
+		return "", c.err
+	}
+	return resolveSheetName(c.excelFile, c.sheet, c.sheetIndex)
 }
 
 // Skip 跳过几行

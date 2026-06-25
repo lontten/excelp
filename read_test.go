@@ -69,10 +69,8 @@ func Test_normalizeCol(t *testing.T) {
 	}
 }
 
-func writeTestXLSX(t *testing.T, sheet string, rows [][]string) string {
+func writeRowsToSheet(t *testing.T, f *excelize.File, sheet string, rows [][]string) {
 	t.Helper()
-
-	f := excelize.NewFile()
 	for i, row := range rows {
 		for j, cell := range row {
 			colName, err := excelize.ColumnNumberToName(j + 1)
@@ -85,6 +83,46 @@ func writeTestXLSX(t *testing.T, sheet string, rows [][]string) string {
 			}
 		}
 	}
+}
+
+type testSheet struct {
+	name string
+	rows [][]string
+}
+
+func writeTestXLSXMultiSheet(t *testing.T, sheets []testSheet) string {
+	t.Helper()
+	if len(sheets) == 0 {
+		t.Fatal("no sheets")
+	}
+
+	f := excelize.NewFile()
+	if err := f.SetSheetName("Sheet1", sheets[0].name); err != nil {
+		t.Fatal(err)
+	}
+	writeRowsToSheet(t, f, sheets[0].name, sheets[0].rows)
+	for i := 1; i < len(sheets); i++ {
+		if _, err := f.NewSheet(sheets[i].name); err != nil {
+			t.Fatal(err)
+		}
+		writeRowsToSheet(t, f, sheets[i].name, sheets[i].rows)
+	}
+
+	path := filepath.Join(t.TempDir(), "multi.xlsx")
+	if err := f.SaveAs(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func writeTestXLSX(t *testing.T, sheet string, rows [][]string) string {
+	t.Helper()
+
+	f := excelize.NewFile()
+	writeRowsToSheet(t, f, sheet, rows)
 
 	path := filepath.Join(t.TempDir(), "test.xlsx")
 	if err := f.SaveAs(path); err != nil {
@@ -102,7 +140,7 @@ func TestRead_ColNum(t *testing.T) {
 		{"a", "b", "c", "d"},
 	})
 
-	ctx := ExcelRead().Url(path).Sheet("Sheet1").ColNum(3)
+	ctx := ExcelRead().Url(path).SheetName("Sheet1").ColNum(3)
 	defer ctx.Close()
 
 	var got [][]string
@@ -143,7 +181,7 @@ func TestReadModel_ColNum(t *testing.T) {
 		{"x", "y", "z", "extra"},
 	})
 
-	ctx := ExcelRead().Url(path).Sheet("Sheet1").ColNum(3)
+	ctx := ExcelRead().Url(path).SheetName("Sheet1").ColNum(3)
 	defer ctx.Close()
 
 	var got []colNumRow
@@ -164,5 +202,81 @@ func TestReadModel_ColNum(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("ReadModel() models = %v, want %v", got, want)
+	}
+}
+
+func readAllRows(t *testing.T, ctx *ExcelReadContext) [][]string {
+	t.Helper()
+	var got [][]string
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		if len(errs) > 0 {
+			t.Errorf("row %d: unexpected cell errors: %v", index, errs)
+		}
+		got = append(got, append([]string(nil), row...))
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return got
+}
+
+func TestRead_SheetByName(t *testing.T) {
+	path := writeTestXLSXMultiSheet(t, []testSheet{
+		{name: "Sheet1", rows: [][]string{{"only-sheet1"}}},
+		{name: "Sheet2", rows: [][]string{{"target-data"}}},
+	})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet2")
+	defer ctx.Close()
+
+	got := readAllRows(t, ctx)
+	want := [][]string{{"target-data"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Read() rows = %v, want %v", got, want)
+	}
+}
+
+func TestRead_SheetByIndex(t *testing.T) {
+	path := writeTestXLSXMultiSheet(t, []testSheet{
+		{name: "Sheet1", rows: [][]string{{"only-sheet1"}}},
+		{name: "Sheet2", rows: [][]string{{"target-data"}}},
+	})
+
+	ctx := ExcelRead().Url(path).SheetIndex(2)
+	defer ctx.Close()
+
+	got := readAllRows(t, ctx)
+	want := [][]string{{"target-data"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Read() rows = %v, want %v", got, want)
+	}
+}
+
+func TestRead_SheetIndex_outOfRange(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{{"a"}})
+
+	ctx := ExcelRead().Url(path).SheetIndex(99)
+	defer ctx.Close()
+
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected error for out of range sheet index")
+	}
+}
+
+func TestRead_SheetIndex_zero(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{{"a"}})
+
+	ctx := ExcelRead().Url(path).SheetIndex(0)
+	defer ctx.Close()
+
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected error for sheet index 0")
 	}
 }

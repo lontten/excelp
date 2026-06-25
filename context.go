@@ -2,6 +2,7 @@ package excelp
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
 
@@ -12,7 +13,7 @@ import (
 
 // ExcelReadContext 是 Excel 读取的链式配置上下文，配合 Read 或 ReadModel 使用。
 //
-// 通过 Url、Sheet、Skip、ColNum 等方法配置后，调用 Read/ReadModel 开始逐行读取。
+// 通过 Url、SheetName、SheetIndex、Skip、ColNum 等方法配置后，调用 Read/ReadModel 开始逐行读取。
 type ExcelReadContext struct {
 	currentIndex int // Excel 行号，从 1 开始递增
 	url          *string
@@ -76,17 +77,43 @@ func (c *ExcelReadContext) initRows() *ExcelReadContext {
 		c.err = errors.New("no set excel")
 		return c
 	}
-	if c.sheet == nil {
-		c.err = errors.New("no set sheet")
+	sheetName, err := c.sheetName()
+	if err != nil {
+		c.err = err
 		return c
 	}
-	rows, err := c.excelFile.Rows(*c.sheet)
+	rows, err := c.excelFile.Rows(sheetName)
 	if err != nil {
 		c.err = err
 		return c
 	}
 	c.rows = rows
 	return c
+}
+
+func resolveSheetName(f *excelize.File, sheet *string, sheetIndex *int) (string, error) {
+	if f == nil {
+		return "", errors.New("no set excel")
+	}
+	if sheet != nil {
+		return *sheet, nil
+	}
+	if sheetIndex != nil {
+		list := f.GetSheetList()
+		idx := *sheetIndex
+		if idx < 1 || idx > len(list) {
+			return "", fmt.Errorf("sheet index %d out of range, total %d", idx, len(list))
+		}
+		return list[idx-1], nil
+	}
+	return "", errors.New("no set sheet")
+}
+
+func (c *ExcelReadContext) sheetName() (string, error) {
+	if c.err != nil {
+		return "", c.err
+	}
+	return resolveSheetName(c.excelFile, c.sheet, c.sheetIndex)
 }
 
 // Url 设置 Excel 文件路径并打开文件，支持链式调用。
@@ -101,9 +128,19 @@ func (c *ExcelReadContext) Url(url string) *ExcelReadContext {
 	return c
 }
 
-// Sheet 设置要读取的工作表名称，支持链式调用。
-func (c *ExcelReadContext) Sheet(sheet string) *ExcelReadContext {
-	c.sheet = &sheet
+// SheetName 按名称设置要读取的工作表，与 SheetIndex 互斥，后调用者生效。
+func (c *ExcelReadContext) SheetName(name string) *ExcelReadContext {
+	c.sheet = &name
+	c.sheetIndex = nil
+	return c
+}
+
+// SheetIndex 按下标设置要读取的工作表，下标从 1 开始（1 表示第一个工作表），与 SheetName 互斥。
+//
+// 需在 Url 打开文件后才能解析实际工作表名称。
+func (c *ExcelReadContext) SheetIndex(index int) *ExcelReadContext {
+	c.sheetIndex = &index
+	c.sheet = nil
 	return c
 }
 
@@ -114,14 +151,15 @@ func (c *ExcelReadContext) DateCol(col ...string) *ExcelReadContext {
 		c.err = errors.New("no set excel")
 		return c
 	}
-	if c.sheet == nil {
-		c.err = errors.New("no set sheet")
+	sheetName, err := c.sheetName()
+	if err != nil {
+		c.err = err
 		return c
 	}
 
 	styleID, _ := c.excelFile.NewStyle(TimeFormat[1])
 	for _, s := range col {
-		err := c.excelFile.SetColStyle(*c.sheet, s, styleID)
+		err := c.excelFile.SetColStyle(sheetName, s, styleID)
 		if err != nil {
 			c.err = err
 			return c
@@ -137,14 +175,15 @@ func (c *ExcelReadContext) TimeCol(col ...string) *ExcelReadContext {
 		c.err = errors.New("no set excel")
 		return c
 	}
-	if c.sheet == nil {
-		c.err = errors.New("no set sheet")
+	sheetName, err := c.sheetName()
+	if err != nil {
+		c.err = err
 		return c
 	}
 
 	styleID, _ := c.excelFile.NewStyle(TimeFormat[2])
 	for _, s := range col {
-		err := c.excelFile.SetColStyle(*c.sheet, s, styleID)
+		err := c.excelFile.SetColStyle(sheetName, s, styleID)
 		if err != nil {
 			c.err = err
 			return c
@@ -160,14 +199,15 @@ func (c *ExcelReadContext) DateTimeCol(col ...string) *ExcelReadContext {
 		c.err = errors.New("no set excel")
 		return c
 	}
-	if c.sheet == nil {
-		c.err = errors.New("no set sheet")
+	sheetName, err := c.sheetName()
+	if err != nil {
+		c.err = err
 		return c
 	}
 
 	styleID, _ := c.excelFile.NewStyle(TimeFormat[3])
 	for _, s := range col {
-		err := c.excelFile.SetColStyle(*c.sheet, s, styleID)
+		err := c.excelFile.SetColStyle(sheetName, s, styleID)
 		if err != nil {
 			c.err = err
 			return c

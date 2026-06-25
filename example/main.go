@@ -11,7 +11,7 @@ func main() {
 
 	readContext := excelp.ExcelRead().
 		Url("./excelp_demo.xlsx").
-		Sheet("Sheet1").
+		SheetName("Sheet1").
 		EnableAsync(2).
 		ColNum(3).
 		Skip(1) //跳过第一行
