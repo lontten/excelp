@@ -7,7 +7,6 @@ import (
 	"reflect"
 
 	"github.com/lontten/excelp/utils"
-	"github.com/lontten/lcore/v2/types"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -46,10 +45,9 @@ type Field struct {
 	required bool // 是否必填
 }
 
-// ExcelRead 创建读取上下文，默认 Sheet 为 Sheet1，默认跳过空行。
+// ExcelRead 创建读取上下文，未指定工作表时默认使用第一个，默认跳过空行。
 func ExcelRead() *ExcelReadContext {
 	return &ExcelReadContext{
-		sheet:              types.NewString("Sheet1"),
 		skipEmptyRow:       true,
 		cellConvertFuncMap: make(map[int]func(col string) (string, error)),
 	}
@@ -106,7 +104,11 @@ func resolveSheetName(f *excelize.File, sheet *string, sheetIndex *int) (string,
 		}
 		return list[idx-1], nil
 	}
-	return "", errors.New("no set sheet")
+	list := f.GetSheetList()
+	if len(list) == 0 {
+		return "", errors.New("no sheet in workbook")
+	}
+	return list[0], nil
 }
 
 func (c *ExcelReadContext) sheetName() (string, error) {
@@ -129,6 +131,7 @@ func (c *ExcelReadContext) Url(url string) *ExcelReadContext {
 }
 
 // SheetName 按名称设置要读取的工作表，与 SheetIndex 互斥，后调用者生效。
+// 若均未设置，默认使用第一个工作表。
 func (c *ExcelReadContext) SheetName(name string) *ExcelReadContext {
 	c.sheet = &name
 	c.sheetIndex = nil
@@ -136,6 +139,7 @@ func (c *ExcelReadContext) SheetName(name string) *ExcelReadContext {
 }
 
 // SheetIndex 按下标设置要读取的工作表，下标从 1 开始（1 表示第一个工作表），与 SheetName 互斥。
+// 若均未设置，默认使用第一个工作表。
 //
 // 需在 Url 打开文件后才能解析实际工作表名称。
 func (c *ExcelReadContext) SheetIndex(index int) *ExcelReadContext {

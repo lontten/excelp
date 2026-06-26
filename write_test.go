@@ -2,6 +2,7 @@ package excelp
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/xuri/excelize/v2"
@@ -38,6 +39,44 @@ func TestWrite_SheetIndex(t *testing.T) {
 	}
 }
 
+func TestWrite_DefaultFirstSheet(t *testing.T) {
+	f := excelize.NewFile()
+	if err := f.SetSheetName("Sheet1", "CustomFirst"); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "template.xlsx")
+	if err := f.SaveAs(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := ExcelWrite().Template(path)
+	if err := Write(ctx, []string{"hello"}); err != nil {
+		t.Fatal(err)
+	}
+	saved, err := ctx.Save()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(saved)
+
+	out, err := excelize.OpenFile(saved)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer out.Close()
+
+	val, err := out.GetCellValue("CustomFirst", "A1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val != "hello" {
+		t.Errorf("CustomFirst A1 = %q, want %q", val, "hello")
+	}
+}
+
 func Test_resolveSheetName(t *testing.T) {
 	f := excelize.NewFile()
 	defer f.Close()
@@ -65,8 +104,8 @@ func Test_resolveSheetName(t *testing.T) {
 			want:       "Sheet2",
 		},
 		{
-			name:    "no sheet",
-			wantErr: true,
+			name: "default first sheet",
+			want: "Sheet1",
 		},
 	}
 	for _, tt := range tests {

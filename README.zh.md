@@ -6,8 +6,8 @@
 
     readContext := excelp.ExcelRead().
         Url("./excelp_demo.xlsx").
-        SheetName("Sheet1").       // 按名称指定工作表
-        // SheetIndex(2).     // 或按下标指定（从 1 开始，2 表示第二个工作表）
+        // SheetName("数据").  // 可选，默认第一个工作表
+        // SheetIndex(2).     // 可选，按下标指定（从 1 开始）
         ColNum(3).// 固定列数：不足补空、超出截断
         Skip(1) //跳过第一行
     
@@ -32,7 +32,7 @@
     
     readContext := excelp.ExcelRead().
         Url("./excelp_demo.xlsx").
-        SheetName("Sheet1").
+        // SheetName("数据").  // 可选，默认第一个工作表
         ColNum(3).
         Skip(1) //跳过第一行
     

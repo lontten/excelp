@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/lontten/lcore/v2/types"
 	"github.com/lontten/lutil/fileutil"
 	"github.com/xuri/excelize/v2"
 )
@@ -35,7 +34,6 @@ type ExcelWriteContext struct {
 
 func ExcelWrite() *ExcelWriteContext {
 	return &ExcelWriteContext{
-		sheet:              types.NewString("Sheet1"),
 		cellConvertFuncMap: make(map[int]func(col string) (string, error)),
 	}
 }
@@ -73,6 +71,7 @@ func (c *ExcelWriteContext) Template(path string) *ExcelWriteContext {
 }
 
 // SheetName 按名称设置要写入的工作表，与 SheetIndex 互斥，后调用者生效。
+// 若均未设置，默认使用第一个工作表。
 func (c *ExcelWriteContext) SheetName(name string) *ExcelWriteContext {
 	c.sheet = &name
 	c.sheetIndex = nil
@@ -80,6 +79,7 @@ func (c *ExcelWriteContext) SheetName(name string) *ExcelWriteContext {
 }
 
 // SheetIndex 按下标设置要写入的工作表，下标从 1 开始（1 表示第一个工作表），与 SheetName 互斥。
+// 若均未设置，默认使用第一个工作表。
 //
 // 需在 Template 打开文件后才能解析实际工作表名称。
 func (c *ExcelWriteContext) SheetIndex(index int) *ExcelWriteContext {

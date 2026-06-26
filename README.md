@@ -6,8 +6,8 @@
 
     readContext := excelp.ExcelRead().
         Url("./excelp_demo.xlsx").
-        SheetName("Sheet1").       // by sheet name
-        // SheetIndex(2).     // or by index (1-based, 2 = second sheet)
+        // SheetName("data").  // optional, defaults to first sheet
+        // SheetIndex(2).     // optional, by index (1-based)
         ColNum(3).// 固定列数：不足补空、超出截断
         Skip(1) //跳过第一行
     
@@ -33,7 +33,7 @@
     
     readContext := excelp.ExcelRead().
         Url("./excelp_demo.xlsx").
-        SheetName("Sheet1").
+        // SheetName("Sheet1").  // optional, defaults to first sheet
         ColNum(3).
         Skip(1) //跳过第一行
     

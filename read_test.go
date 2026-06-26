@@ -280,3 +280,29 @@ func TestRead_SheetIndex_zero(t *testing.T) {
 		t.Fatal("expected error for sheet index 0")
 	}
 }
+
+func TestRead_DefaultFirstSheet(t *testing.T) {
+	f := excelize.NewFile()
+	if err := f.SetSheetName("Sheet1", "CustomFirst"); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.SetCellValue("CustomFirst", "A1", "first-sheet-data"); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "default.xlsx")
+	if err := f.SaveAs(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := ExcelRead().Url(path)
+	defer ctx.Close()
+
+	got := readAllRows(t, ctx)
+	want := [][]string{{"first-sheet-data"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Read() rows = %v, want %v", got, want)
+	}
+}
