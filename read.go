@@ -1,6 +1,7 @@
 package excelp
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/lontten/excelp/utils"
@@ -13,6 +14,9 @@ import (
 // index 为 Excel 行号，从 1 开始；row 为当前行各列字符串，已去除首尾空格，
 // 且若配置了 ColNum 则已做列数归一化（不足补空、超出截断）。
 // err 为当前行的单元格级错误列表，可能为空。
+//
+// 回调返回普通 error 时停止读取并将该错误返回给调用方；
+// 回调返回 ErrExcelPStop 时停止读取并返回 nil（正常提前结束）。
 func Read(
 	c *ExcelReadContext,
 	fun func(index int, row []string, err []CellErr) error,
@@ -31,6 +35,17 @@ func ReadModel[T any](
 	return read[T](c, nil, fun)
 }
 
+func panicToError(r any) error {
+	switch v := r.(type) {
+	case error:
+		return v
+	case string:
+		return errors.New(v)
+	default:
+		return fmt.Errorf("panic: %v", v)
+	}
+}
+
 func read[T any](
 	c *ExcelReadContext,
 	fun1 func(index int, row []string, err []CellErr) error,
@@ -40,24 +55,32 @@ func read[T any](
 		return errors.New("ExcelReadContext is nil")
 	}
 	c.initRows()
-	if c.err != nil {
-		return c.err
+	if err := c.getErr(); err != nil {
+		return err
 	}
+	rows := c.rows
+	defer func() {
+		if rows != nil {
+			_ = rows.Close()
+		}
+	}()
+
 	var pool *lutil.Pool
 	if c.maxLine > 0 {
 		pool = lutil.NewPool(c.maxLine, 1, nil)
-		defer pool.Shutdown()
 	}
 
 	if fun2 != nil {
 		dest := new(T)
 		c.initModel(dest)
+		if err := c.getErr(); err != nil {
+			return err
+		}
 	}
 
-	rows := c.rows
 	for rows.Next() {
-		if c.err != nil {
-			return c.err
+		if c.shouldStop() {
+			break
 		}
 		c.currentIndex++
 		index := c.currentIndex
@@ -66,35 +89,55 @@ func read[T any](
 		}
 		col, err := rows.Columns()
 		if err != nil {
-			return err
+			c.setErr(err)
+			break
 		}
 
 		if pool != nil {
+			idx, cols := index, col
 			pool.Submit(func() {
 				if !c.panic {
 					defer func() {
-						r := recover()
-						if r != nil {
-							c.err = r.(error)
-							return
+						if r := recover(); r != nil {
+							c.setErr(panicToError(r))
 						}
 					}()
 				}
 
-				err = doExec(c, index, fun1, fun2, col)
-				if err != nil {
-					c.err = err
+				execErr := doExec(c, idx, fun1, fun2, cols)
+				if execErr == nil {
+					return
 				}
+				if errors.Is(execErr, ErrExcelPStop) {
+					c.setStop()
+					return
+				}
+				c.setErr(execErr)
 			})
 		} else {
-			err = doExec(c, index, fun1, fun2, col)
-			if err != nil {
-				c.err = err
+			execErr := doExec(c, index, fun1, fun2, col)
+			if execErr == nil {
+				continue
 			}
+			if errors.Is(execErr, ErrExcelPStop) {
+				break
+			}
+			c.setErr(execErr)
+			break
 		}
 	}
-	return nil
+
+	if pool != nil {
+		pool.Shutdown()
+	}
+
+	if err := rows.Error(); err != nil {
+		c.setErr(err)
+	}
+
+	return c.getErr()
 }
+
 // normalizeCol 将 list 归一化为固定 colNum 列：不足时末尾补空字符串，超出时截断。
 // colNum <= 0 时不做处理，原样返回。
 func normalizeCol(list []string, colNum int) []string {
@@ -147,13 +190,23 @@ func doExec[T any](
 
 	if len(cellErrList) == 0 {
 		for i, f := range c.cellConvertFuncMap {
-			source := list[i]
-			target, err := f(source)
-			if err != nil {
+			if i < 0 || i >= len(list) {
 				numberToName, _ := utils.ColumnNumberToName(i)
 				cellErrList = append(cellErrList, CellErr{
 					Col:   numberToName,
-					Err:   err.Error(),
+					Err:   "column index out of range",
+					Row:   index,
+					Value: "",
+				})
+				continue
+			}
+			source := list[i]
+			target, convErr := f(source)
+			if convErr != nil {
+				numberToName, _ := utils.ColumnNumberToName(i)
+				cellErrList = append(cellErrList, CellErr{
+					Col:   numberToName,
+					Err:   convErr.Error(),
 					Row:   index,
 					Value: source,
 				})
@@ -175,11 +228,5 @@ func doExec[T any](
 		return errors.New("fun1 or fun2 is nil")
 	}
 
-	if e != nil {
-		if errors.Is(e, ErrExcelPStop) {
-			return nil
-		}
-		return e
-	}
-	return nil
+	return e
 }

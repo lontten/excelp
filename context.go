@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sync"
 
 	"github.com/lontten/excelp/utils"
 	"github.com/xuri/excelize/v2"
@@ -24,7 +25,9 @@ type ExcelReadContext struct {
 	skip         int  // 跳过的行数（从第 1 行起计）
 	skipEmptyRow bool // 是否跳过全空行，默认 true
 	colNum       int  // 固定列数，0 表示不处理
+	errMu        sync.Mutex
 	err          error
+	stop         bool // 收到 ErrExcelPStop 后停止继续提交/读取
 	panic        bool // 异步模式下是否允许 panic 向上抛出
 
 	// ------ 自定义 -----
@@ -39,6 +42,35 @@ type ExcelReadContext struct {
 
 	// ------ line -----
 	maxLine int // 异步 worker 数量，0 表示同步读取
+}
+
+func (c *ExcelReadContext) setErr(err error) {
+	if err == nil {
+		return
+	}
+	c.errMu.Lock()
+	defer c.errMu.Unlock()
+	if c.err == nil {
+		c.err = err
+	}
+}
+
+func (c *ExcelReadContext) getErr() error {
+	c.errMu.Lock()
+	defer c.errMu.Unlock()
+	return c.err
+}
+
+func (c *ExcelReadContext) setStop() {
+	c.errMu.Lock()
+	defer c.errMu.Unlock()
+	c.stop = true
+}
+
+func (c *ExcelReadContext) shouldStop() bool {
+	c.errMu.Lock()
+	defer c.errMu.Unlock()
+	return c.stop || c.err != nil
 }
 type Field struct {
 	name     string

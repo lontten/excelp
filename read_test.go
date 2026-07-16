@@ -1,9 +1,11 @@
 package excelp
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
+	"sync/atomic"
 	"testing"
 
 	"github.com/xuri/excelize/v2"
@@ -304,5 +306,162 @@ func TestRead_DefaultFirstSheet(t *testing.T) {
 	want := [][]string{{"first-sheet-data"}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Read() rows = %v, want %v", got, want)
+	}
+}
+
+func TestRead_LastRowCallbackError(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{
+		{"a"},
+		{"b"},
+	})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1")
+	defer ctx.Close()
+
+	wantErr := errors.New("boom on last row")
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		if index == 2 {
+			return wantErr
+		}
+		return nil
+	})
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("Read() error = %v, want %v", err, wantErr)
+	}
+}
+
+func TestRead_ErrExcelPStop(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{
+		{"a"},
+		{"b"},
+		{"c"},
+	})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1")
+	defer ctx.Close()
+
+	var seen int
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		seen++
+		if index == 1 {
+			return ErrExcelPStop
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("Read() unexpected error: %v", err)
+	}
+	if seen != 1 {
+		t.Fatalf("seen = %d, want 1 (stop after first data row)", seen)
+	}
+}
+
+func TestRead_AsyncLastRowError(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{
+		{"a"},
+		{"b"},
+	})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1").EnableAsync(2)
+	defer ctx.Close()
+
+	wantErr := errors.New("async boom")
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		if index == 2 {
+			return wantErr
+		}
+		return nil
+	})
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("Read() error = %v, want %v", err, wantErr)
+	}
+}
+
+func TestRead_AsyncPanicRecover(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{
+		{"a"},
+	})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1").EnableAsync(1)
+	defer ctx.Close()
+
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		panic("string panic")
+	})
+	if err == nil {
+		t.Fatal("expected recovered panic error")
+	}
+	if err.Error() != "string panic" {
+		t.Fatalf("error = %q, want %q", err.Error(), "string panic")
+	}
+}
+
+func TestRead_ConvertCellOutOfRange(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{
+		{"only-a"},
+	})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1").ConvertCell("B", func(col string) (string, error) {
+		return col, nil
+	})
+	defer ctx.Close()
+
+	var gotErrs []CellErr
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		gotErrs = append(gotErrs, errs...)
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gotErrs) != 1 {
+		t.Fatalf("cell errs = %v, want 1 out-of-range error", gotErrs)
+	}
+	if gotErrs[0].Err != "column index out of range" {
+		t.Fatalf("cell err = %q, want column index out of range", gotErrs[0].Err)
+	}
+}
+
+type badTagRow struct {
+	A string `excelp:"index:!!!"`
+}
+
+func TestReadModel_InitModelErrorEmptySheet(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1")
+	defer ctx.Close()
+
+	err := ReadModel(ctx, func(index int, row []string, model badTagRow, errs []CellErr) error {
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected initModel error for bad tag")
+	}
+}
+
+func TestRead_AsyncStop(t *testing.T) {
+	rows := make([][]string, 0, 20)
+	for i := 0; i < 20; i++ {
+		rows = append(rows, []string{fmt.Sprintf("r%d", i)})
+	}
+	path := writeTestXLSX(t, "Sheet1", rows)
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1").EnableAsync(2)
+	defer ctx.Close()
+
+	var seen atomic.Int32
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		seen.Add(1)
+		if index == 1 {
+			return ErrExcelPStop
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("Read() unexpected error: %v", err)
+	}
+	if n := seen.Load(); n < 1 {
+		t.Fatalf("seen = %d, want at least 1", n)
 	}
 }
