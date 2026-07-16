@@ -18,8 +18,8 @@ func Write(c *ExcelWriteContext, col []string) error {
 	if c.err != nil {
 		return c.err
 	}
-	if c.excelFile == nil {
-		return errors.New("template err")
+	if err := c.ensureWorkbook(); err != nil {
+		return err
 	}
 	sheetName, err := c.sheetName()
 	if err != nil {

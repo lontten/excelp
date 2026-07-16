@@ -39,6 +39,32 @@ func TestWrite_SheetIndex(t *testing.T) {
 	}
 }
 
+func TestWrite_NoTemplate_BlankExcel(t *testing.T) {
+	ctx := ExcelWrite()
+	if err := Write(ctx, []string{"hello"}); err != nil {
+		t.Fatal(err)
+	}
+	saved, err := ctx.Save()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(saved)
+
+	f, err := excelize.OpenFile(saved)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	val, err := f.GetCellValue("Sheet1", "A1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if val != "hello" {
+		t.Errorf("Sheet1 A1 = %q, want %q", val, "hello")
+	}
+}
+
 func TestWrite_DefaultFirstSheet(t *testing.T) {
 	f := excelize.NewFile()
 	if err := f.SetSheetName("Sheet1", "CustomFirst"); err != nil {

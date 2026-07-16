@@ -1,7 +1,6 @@
 package excelp
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -70,6 +69,49 @@ func (c *ExcelWriteContext) Template(path string) *ExcelWriteContext {
 	return c
 }
 
+// ensureWorkbook 在未指定模板时惰性创建空白工作簿。
+func (c *ExcelWriteContext) ensureWorkbook() error {
+	if c.excelFile != nil {
+		return nil
+	}
+	if c.err != nil {
+		return c.err
+	}
+	path, err := fileutil.NewTempFileReturnPath(".xlsx")
+	if err != nil {
+		c.err = err
+		return err
+	}
+	f := excelize.NewFile()
+	if err := f.SaveAs(path); err != nil {
+		_ = f.Close()
+		_ = os.Remove(path)
+		c.err = err
+		return err
+	}
+	if err := f.Close(); err != nil {
+		_ = os.Remove(path)
+		c.err = err
+		return err
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		_ = os.Remove(path)
+		c.err = err
+		return err
+	}
+	opened, err := excelize.OpenFile(path)
+	if err != nil {
+		_ = file.Close()
+		_ = os.Remove(path)
+		c.err = err
+		return err
+	}
+	c.file = file
+	c.excelFile = opened
+	return nil
+}
+
 // SheetName 按名称设置要写入的工作表，与 SheetIndex 互斥，后调用者生效。
 // 若均未设置，默认使用第一个工作表。
 func (c *ExcelWriteContext) SheetName(name string) *ExcelWriteContext {
@@ -103,8 +145,8 @@ func (c *ExcelWriteContext) Skip(num int) *ExcelWriteContext {
 
 // Save 关闭文件,返回文件路径
 func (c *ExcelWriteContext) Save() (string, error) {
-	if c.excelFile == nil {
-		return "", errors.New("template err")
+	if err := c.ensureWorkbook(); err != nil {
+		return "", err
 	}
 	err := c.excelFile.Save()
 	if err != nil {
