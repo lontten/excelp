@@ -103,11 +103,7 @@ func scanField(field reflect.Value, value string, f Field) error {
 	case reflect.Struct:
 		switch field.Type().Name() {
 		case "Time":
-			var format = f.format
-			if format == "" {
-				format = `2006-01-02 15:04:05`
-			}
-			t, err := time.Parse(format, value)
+			t, err := time.Parse(`2006-01-02 15:04:05`, value)
 			if err != nil {
 				return fmt.Errorf("can not convert %v to time.Time", value)
 			}

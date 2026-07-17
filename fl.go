@@ -47,7 +47,6 @@ func _getStructC(t reflect.Type) (m map[int]Field, err error) {
 		fieldConfig := Field{
 			name:     name,
 			required: getRequired(tag),
-			format:   getTimeFormat(tag),
 		}
 		m[index] = fieldConfig
 	}
@@ -76,20 +75,6 @@ func getIndex(s string) (int, error) {
 		}
 	}
 	return -1, nil
-}
-
-func getTimeFormat(s string) string {
-	split := strings.Split(s, ";")
-	for _, s2 := range split {
-		index := strings.Index(s2, ":")
-		if index > -1 {
-			head := s2[:index]
-			if head == "format" {
-				return s2[index+1:]
-			}
-		}
-	}
-	return ""
 }
 
 func getRequired(s string) bool {
