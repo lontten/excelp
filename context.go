@@ -72,9 +72,11 @@ func (c *ExcelReadContext) shouldStop() bool {
 	defer c.errMu.Unlock()
 	return c.stop || c.err != nil
 }
+
 type Field struct {
 	name     string
-	required bool // 是否必填
+	required bool   // 是否必填
+	format   string // Go time.Parse 布局，来自 excelp:"format:..."
 }
 
 // ExcelRead 创建读取上下文，未指定工作表时默认使用第一个，默认跳过空行。

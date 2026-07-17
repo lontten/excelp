@@ -47,6 +47,7 @@ func _getStructC(t reflect.Type) (m map[int]Field, err error) {
 		fieldConfig := Field{
 			name:     name,
 			required: getRequired(tag),
+			format:   getTimeFormat(tag),
 		}
 		m[index] = fieldConfig
 	}
