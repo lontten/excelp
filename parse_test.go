@@ -8,9 +8,8 @@ import (
 
 func Test_scanField(t *testing.T) {
 	type args struct {
-		field      reflect.Value
-		value      string
-		timeFormat string
+		field reflect.Value
+		value string
 	}
 	tests := []struct {
 		name    string
@@ -50,29 +49,10 @@ func Test_scanField(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "date",
-			args: args{
-				field:      reflect.ValueOf(new(time.Time)),
-				value:      "2020-01-01",
-				timeFormat: "2006-01-02",
-			},
-			wantErr: false,
-		},
-		{
 			name: "datetime",
 			args: args{
-				field:      reflect.ValueOf(new(time.Time)),
-				value:      "2020-01-01 01:01:01",
-				timeFormat: "2006-01-02 15:04:05",
-			},
-			wantErr: false,
-		},
-		{
-			name: "time",
-			args: args{
-				field:      reflect.ValueOf(new(time.Time)),
-				value:      "01:01:01",
-				timeFormat: "15:04:05",
+				field: reflect.ValueOf(new(time.Time)),
+				value: "2020-01-01 01:01:01",
 			},
 			wantErr: false,
 		},
