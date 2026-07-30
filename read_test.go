@@ -465,3 +465,56 @@ func TestRead_AsyncStop(t *testing.T) {
 		t.Fatalf("seen = %d, want at least 1", n)
 	}
 }
+
+func TestRead_CleanCellDefault(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{
+		{"湖北省，武汉市\u200C", "LINE\u00A01-4"},
+	})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1")
+	defer ctx.Close()
+
+	got := readAllRows(t, ctx)
+	want := [][]string{{"湖北省，武汉市", "LINE 1-4"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Read() rows = %#v, want %#v", got, want)
+	}
+}
+
+func TestRead_RawCol(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{
+		{"湖北省，武汉市\u200C", "LINE\u00A01-4", "a\u200Bb"},
+	})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1").RawCol("B")
+	defer ctx.Close()
+
+	got := readAllRows(t, ctx)
+	if len(got) != 1 || len(got[0]) != 3 {
+		t.Fatalf("unexpected rows: %#v", got)
+	}
+	if got[0][0] != "湖北省，武汉市" {
+		t.Errorf("col A cleaned = %q, want 湖北省，武汉市", got[0][0])
+	}
+	if got[0][1] != "LINE\u00A01-4" {
+		t.Errorf("col B raw = %q, want LINE\\u00A01-4", got[0][1])
+	}
+	if got[0][2] != "ab" {
+		t.Errorf("col C cleaned = %q, want ab", got[0][2])
+	}
+}
+
+func TestRead_RawCol_invalid(t *testing.T) {
+	path := writeTestXLSX(t, "Sheet1", [][]string{{"a"}})
+
+	ctx := ExcelRead().Url(path).SheetName("Sheet1").RawCol("!!!")
+	defer ctx.Close()
+
+	err := Read(ctx, func(index int, row []string, errs []CellErr) error {
+		return nil
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid RawCol")
+	}
+}
+

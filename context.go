@@ -33,6 +33,7 @@ type ExcelReadContext struct {
 	// ------ 自定义 -----
 	convertFunc        func(index int, col []string) ([]string, error)
 	cellConvertFuncMap map[int]func(col string) (string, error)
+	rawColMap          map[int]struct{} // 跳过 CleanCell 的列（index 从 0）
 
 	// ------ T -----
 	scanDest any
@@ -83,6 +84,7 @@ func ExcelRead() *ExcelReadContext {
 	return &ExcelReadContext{
 		skipEmptyRow:       true,
 		cellConvertFuncMap: make(map[int]func(col string) (string, error)),
+		rawColMap:          make(map[int]struct{}),
 	}
 }
 
@@ -301,6 +303,22 @@ func (c *ExcelReadContext) ConvertCell(col string, fun func(col string) (string,
 		return c
 	}
 	c.cellConvertFuncMap[number] = fun
+	return c
+}
+
+// RawCol 指定列跳过 CleanCell，保留单元格原文字节；可多列，支持链式调用。
+func (c *ExcelReadContext) RawCol(col ...string) *ExcelReadContext {
+	if c.rawColMap == nil {
+		c.rawColMap = make(map[int]struct{})
+	}
+	for _, s := range col {
+		number, err := utils.ColumnNameToNumber(s)
+		if err != nil {
+			c.err = err
+			return c
+		}
+		c.rawColMap[number] = struct{}{}
+	}
 	return c
 }
 

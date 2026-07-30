@@ -48,6 +48,41 @@ func TestCleanCell(t *testing.T) {
 			in:   "",
 			want: "",
 		},
+		{
+			name: "NBSP middle becomes space",
+			in:   "LINE\u00A01-4",
+			want: "LINE 1-4",
+		},
+		{
+			name: "NBSP edges trimmed after replace",
+			in:   "\u00A0hello\u00A0",
+			want: "hello",
+		},
+		{
+			name: "ideographic and narrow spaces",
+			in:   "a\u3000b\u202Fc\u205Fd",
+			want: "a b c d",
+		},
+		{
+			name: "paragraph separator to newline",
+			in:   "LSQWRF100/R2Y\u2029名义制冷量",
+			want: "LSQWRF100/R2Y\n名义制冷量",
+		},
+		{
+			name: "line separator to newline",
+			in:   "a\u2028b",
+			want: "a\nb",
+		},
+		{
+			name: "keep normal newline and tab",
+			in:   "a\nb\tc",
+			want: "a\nb\tc",
+		},
+		{
+			name: "city with trailing ZWNJ",
+			in:   "湖北省，武汉市\u200C",
+			want: "湖北省，武汉市",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
