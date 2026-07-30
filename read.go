@@ -11,7 +11,7 @@ import (
 
 // Read 逐行读取 Excel，对每一行调用 fun。
 //
-// index 为 Excel 行号，从 1 开始；row 为当前行各列字符串，已去除首尾空格，
+// index 为 Excel 行号，从 1 开始；row 为当前行各列字符串，已去掉零宽/不可见字符并 TrimSpace，
 // 且若配置了 ColNum 则已做列数归一化（不足补空、超出截断）。
 // err 为当前行的单元格级错误列表，可能为空。
 //
@@ -154,7 +154,7 @@ func normalizeCol(list []string, colNum int) []string {
 	return list
 }
 
-// doExec 处理单行数据：TrimSpace → SkipEmpty → ColNum → Convert/ConvertCell → parse → 回调。
+// doExec 处理单行数据：CleanCell → SkipEmpty → ColNum → Convert/ConvertCell → parse → 回调。
 func doExec[T any](
 	c *ExcelReadContext,
 	index int,
@@ -165,7 +165,7 @@ func doExec[T any](
 	var err error
 	var list = make([]string, 0)
 	for _, v := range col {
-		list = append(list, strings.TrimSpace(v))
+		list = append(list, utils.CleanCell(v))
 	}
 
 	if c.skipEmptyRow {
